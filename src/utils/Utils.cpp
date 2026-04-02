@@ -125,11 +125,11 @@ namespace utils {
             case 5:
                 return "Sell Stop";
             case 6:
-                return "Balance In";
+                return "Deposit";
             case 7:
                 return "Credit In";
             case 8:
-                return "Balance Out";
+                return "Withdrawal";
             case 9:
                 return "Credit Out";
             case 10:
