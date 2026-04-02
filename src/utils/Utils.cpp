@@ -107,4 +107,38 @@ namespace utils {
         const double factor = std::pow(10.0, digits);
         return std::trunc(value * factor) / factor;
     }
+
+    std::string ConvertCmdToString(int cmd) {
+        switch (cmd) {
+            case -1:
+                return "Nothing";
+            case 0:
+                return "Buy";
+            case 1:
+                return "Sell";
+            case 2:
+                return "Buy Limit";
+            case 3:
+                return "Sell Limit";
+            case 4:
+                return "Buy Stop";
+            case 5:
+                return "Sell Stop";
+            case 6:
+                return "Balance In";
+            case 7:
+                return "Credit In";
+            case 8:
+                return "Balance Out";
+            case 9:
+                return "Credit Out";
+            case 10:
+                return "Buy Stop Limit";
+            case 11:
+                return "Sell Stop Limit";
+            default:
+                return "Unknown";
+        }
+    }
+
 } // namespace utils

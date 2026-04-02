@@ -24,4 +24,6 @@ namespace utils {
                                         const std::string& format = "%Y.%m.%d %H:%M:%S");
 
     double TruncateDouble(const double& value, const int& digits);
+
+    std::string ConvertCmdToString(int cmd);
 } // namespace utils
