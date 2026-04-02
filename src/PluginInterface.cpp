@@ -54,6 +54,11 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
         server->GetOpenTradesByLogin(login, &open_trades_vector);
         server->GetPendingTradesByLogin(login, &pending_trades_vector);
         server->GetTransactionsByLogin(login, from, to, &transactions_vector);
+
+        // Фильтрация для closed_trades_vector
+        std::erase_if(closed_trades_vector, [from, to](const TradeRecord& closed_trade) {
+            return !(closed_trade.close_time >= from && closed_trade.close_time <= to);
+        });
     } catch (const std::exception& e) {
         std::cerr << "[AccountSummaryReport]: " << e.what() << std::endl;
 
@@ -197,7 +202,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
         open_orders_table_builder.AddRow(
             {utils::TruncateDouble(open_trade.order, 0),
              utils::FormatTimestampToString(open_trade.open_time),
-             open_trade.cmd == 0 ? "buy" : "sell",
+             utils::ConvertCmdToString(open_trade.cmd),
              open_trade.symbol,
              utils::TruncateDouble(open_trade.volume / 100.0, 2),
              utils::TruncateDouble(open_trade.open_price * multiplier, 2),
@@ -250,7 +255,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
         pending_trades_table_builder.AddRow(
             {utils::TruncateDouble(pending_trade.order, 0),
              utils::FormatTimestampToString(pending_trade.open_time),
-             pending_trade.cmd == 0 ? "buy" : "sell",
+             utils::ConvertCmdToString(pending_trade.cmd),
              pending_trade.symbol,
              utils::TruncateDouble(pending_trade.volume / 100.0, 2),
              utils::TruncateDouble(pending_trade.open_price * multiplier, 2),
@@ -275,10 +280,11 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     transactions_table_builder.EnableExportButton(true);
 
     transactions_table_builder.AddColumn({"order", "ORDER", 1, search_filter});
-    transactions_table_builder.AddColumn({"open_time", "OPEN_TIME", 4, date_time_filter});
-    transactions_table_builder.AddColumn({"comment", "COMMENT", 5, search_filter});
-    transactions_table_builder.AddColumn({"profit", "AMOUNT", 6, search_filter});
-    transactions_table_builder.AddColumn({"currency", "CURRENCY", 7, search_filter});
+    transactions_table_builder.AddColumn({"order", "TYPE", 2, search_filter});
+    transactions_table_builder.AddColumn({"open_time", "OPEN_TIME", 3, date_time_filter});
+    transactions_table_builder.AddColumn({"comment", "COMMENT", 4, search_filter});
+    transactions_table_builder.AddColumn({"profit", "AMOUNT", 5, search_filter});
+    transactions_table_builder.AddColumn({"currency", "CURRENCY", 6, search_filter});
 
     for (const auto& trx : transactions_vector) {
         double multiplier = 1; // For USD
@@ -293,6 +299,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
         }
 
         transactions_table_builder.AddRow({utils::TruncateDouble(trx.order, 0),
+                                           utils::ConvertCmdToString(trx.cmd),
                                            utils::FormatTimestampToString(trx.open_time),
                                            trx.comment,
                                            utils::TruncateDouble(trx.profit * multiplier, 2),
