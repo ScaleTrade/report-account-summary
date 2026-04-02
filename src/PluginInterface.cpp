@@ -280,7 +280,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     transactions_table_builder.EnableExportButton(true);
 
     transactions_table_builder.AddColumn({"order", "ORDER", 1, search_filter});
-    transactions_table_builder.AddColumn({"order", "TYPE", 2, search_filter});
+    transactions_table_builder.AddColumn({"type", "TYPE", 2, search_filter});
     transactions_table_builder.AddColumn({"open_time", "OPEN_TIME", 3, date_time_filter});
     transactions_table_builder.AddColumn({"comment", "COMMENT", 4, search_filter});
     transactions_table_builder.AddColumn({"profit", "AMOUNT", 5, search_filter});
