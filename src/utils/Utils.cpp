@@ -56,7 +56,7 @@ namespace utils {
             export_btn_props_object.AddMember("buttonType", "primary", allocator);
             export_btn_props_object.AddMember("loading", "{{isExportLoading}}", allocator);
             export_btn_props_object.AddMember(
-                "onClick", "({self}) => {\n      self?.exportPdf();\n    }", allocator);
+                "onClick", "({self}) => {\n self?.exportPdf('account-summary-report');\n} ", allocator);
 
             export_btn_object.AddMember("props", export_btn_props_object, allocator);
 
