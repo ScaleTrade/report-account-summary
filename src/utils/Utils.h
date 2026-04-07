@@ -26,4 +26,7 @@ namespace utils {
     double TruncateDouble(const double& value, const int& digits);
 
     std::string ConvertCmdToString(int cmd);
+
+    double GetMarketPriceByCmd(int cmd, const SymbolRecord& symbol_record);
+
 } // namespace utils

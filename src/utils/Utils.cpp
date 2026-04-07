@@ -56,7 +56,9 @@ namespace utils {
             export_btn_props_object.AddMember("buttonType", "primary", allocator);
             export_btn_props_object.AddMember("loading", "{{isExportLoading}}", allocator);
             export_btn_props_object.AddMember(
-                "onClick", "({self}) => {\n self?.exportPdf('account-summary-report');\n} ", allocator);
+                "onClick",
+                "({self}) => {\n self?.exportPdf('account-summary-report');\n} ",
+                allocator);
 
             export_btn_object.AddMember("props", export_btn_props_object, allocator);
 
@@ -167,6 +169,23 @@ namespace utils {
                 return "Sell Stop Limit";
             default:
                 return "Unknown";
+        }
+    }
+
+    double GetMarketPriceByCmd(int cmd, const SymbolRecord& symbol_record) {
+        switch (cmd) {
+            case 0: // OP_BUY
+            case 2: // OP_BUYLIMIT
+            case 4: // OP_BUYSTOP
+                return symbol_record.ask;
+
+            case 1: // OP_SELL
+            case 3: // OP_SELLLIMIT
+            case 5: // OP_SELLSTOP
+                return symbol_record.bid;
+
+            default:
+                return symbol_record.bid;
         }
     }
 
