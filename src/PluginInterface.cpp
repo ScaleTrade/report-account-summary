@@ -107,72 +107,23 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     FilterConfig date_time_filter;
     date_time_filter.type = FilterType::DateTime;
 
-    // Close orders table
-    TableBuilder closed_orders_table_builder("AccountClosedOrdersTable");
-    closed_orders_table_builder.SetIdColumn("order");
-    closed_orders_table_builder.SetOrderBy("order", "DESC");
-    closed_orders_table_builder.EnableAutoSave(false);
-    closed_orders_table_builder.EnableRefreshButton(false);
-    closed_orders_table_builder.EnableBookmarksButton(false);
-    closed_orders_table_builder.EnableExportButton(true);
-
-    closed_orders_table_builder.AddColumn({"order", "ORDER", 1, search_filter});
-    closed_orders_table_builder.AddColumn({"symbol", "SYMBOL", 7, search_filter});
-    closed_orders_table_builder.AddColumn({"login", "LOGIN", 2, search_filter});
-    closed_orders_table_builder.AddColumn({"type", "ORDER_TYPE", 6, search_filter});
-    closed_orders_table_builder.AddColumn({"volume", "VOLUME", 8, search_filter});
-    closed_orders_table_builder.AddColumn({"open_time", "OPEN_TIME", 4, date_time_filter});
-    closed_orders_table_builder.AddColumn({"open_price", "OPEN_PRICE", 9, search_filter});
-    closed_orders_table_builder.AddColumn({"close_time", "CLOSE_TIME", 5, date_time_filter});
-    closed_orders_table_builder.AddColumn({"close_price", "CLOSE_PRICE", 10, search_filter});
-    closed_orders_table_builder.AddColumn({"profit", "GROSS_PROFIT", 15, search_filter});
-    closed_orders_table_builder.AddColumn({"sl", "S / L", 11, search_filter});
-    closed_orders_table_builder.AddColumn({"tp", "T / P", 12, search_filter});
-    closed_orders_table_builder.AddColumn({"commission", "COMMISSION", 13, search_filter});
-    closed_orders_table_builder.AddColumn({"storage", "SWAP", 14, search_filter});
-    closed_orders_table_builder.AddColumn({"comment", "COMMENT", 17, search_filter});
-
-    for (const auto& closed_trade : closed_trades_vector) {
-        double multiplier = 1;
-
-        if (group_record.currency != "USD") {
-            try {
-                server->CalculateConvertRateByCurrency(
-                    group_record.currency, "USD", closed_trade.cmd, &multiplier);
-            } catch (const std::exception& e) {
-                std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
-            }
-        }
-
-        closed_orders_table_builder.AddRow(
-            {utils::TruncateDouble(closed_trade.order, 0),
-             closed_trade.symbol,
-             std::to_string(closed_trade.login),
-             utils::ConvertCmdToString(closed_trade.cmd),
-             utils::TruncateDouble(closed_trade.volume / 100.0, 2),
-             utils::FormatTimestampToString(closed_trade.open_time),
-             utils::TruncateDouble(closed_trade.open_price * multiplier, 2),
-             utils::FormatTimestampToString(closed_trade.close_time),
-             utils::TruncateDouble(closed_trade.close_price * multiplier, 2),
-             utils::TruncateDouble(closed_trade.profit * multiplier, 2),
-             utils::TruncateDouble(closed_trade.sl, 2),
-             utils::TruncateDouble(closed_trade.tp, 2),
-             utils::TruncateDouble(closed_trade.commission * multiplier, 2),
-             utils::TruncateDouble(closed_trade.storage * multiplier, 2),
-             closed_trade.comment});
-    }
-
-    const JSONObject closed_orders_table_props = closed_orders_table_builder.CreateTableProps();
-    const Node       closed_orders_table_node  = Table({}, closed_orders_table_props);
+    // Common totals
+    std::unordered_map<std::string, ClosedOrdersTotal>  closed_orders_total_map;
+    std::unordered_map<std::string, OpenOrdersTotal>    open_orders_total_map;
+    std::unordered_map<std::string, PendingOrdersTotal> pending_orders_total_map;
+    std::unordered_map<std::string, TransactionsTotal>  transactions_total_map;
 
     // Open orders table
     TableBuilder open_orders_table_builder("AccountOpenOrdersTable");
+
     open_orders_table_builder.SetIdColumn("order");
     open_orders_table_builder.SetOrderBy("order", "DESC");
     open_orders_table_builder.EnableAutoSave(false);
     open_orders_table_builder.EnableRefreshButton(false);
     open_orders_table_builder.EnableBookmarksButton(false);
     open_orders_table_builder.EnableExportButton(true);
+    open_orders_table_builder.EnableTotal(true);
+    open_orders_table_builder.SetTotalDataTitle("TOTAL");
 
     open_orders_table_builder.AddColumn({"order", "ORDER", 1, search_filter});
     open_orders_table_builder.AddColumn({"symbol", "SYMBOL", 2, search_filter});
@@ -208,6 +159,11 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
             std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
         }
 
+        open_orders_total_map["USD"].volume += open_trade.volume;
+        open_orders_total_map["USD"].profit += open_trade.profit * multiplier;
+        open_orders_total_map["USD"].commission += open_trade.commission * multiplier;
+        open_orders_total_map["USD"].storage += open_trade.storage * multiplier;
+
         double market_price = utils::GetMarketPriceByCmd(open_trade.cmd, symbol_record);
         open_orders_table_builder.AddRow(
             {utils::TruncateDouble(open_trade.order, 0),
@@ -226,32 +182,42 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
              open_trade.comment});
     }
 
+    JSONArray open_orders_total_array;
+    open_orders_total_array.emplace_back(JSONObject{
+        {"volume", utils::TruncateDouble(open_orders_total_map["USD"].volume / 100.0, 2)},
+        {"profit", utils::TruncateDouble(open_orders_total_map["USD"].profit, 2)},
+        {"commission", utils::TruncateDouble(open_orders_total_map["USD"].commission, 2)},
+        {"storage", utils::TruncateDouble(open_orders_total_map["USD"].storage, 2)}});
+    open_orders_table_builder.SetTotalData(open_orders_total_array);
+
     const JSONObject open_orders_table_props = open_orders_table_builder.CreateTableProps();
     const Node       open_orders_table_node  = Table({}, open_orders_table_props);
 
     // Pending orders table
-    TableBuilder pending_trades_table_builder("AccountPendingOrdersTable");
+    TableBuilder pending_orders_table_builder("AccountPendingOrdersTable");
 
-    pending_trades_table_builder.SetIdColumn("order");
-    pending_trades_table_builder.SetOrderBy("order", "DESC");
-    pending_trades_table_builder.EnableAutoSave(false);
-    pending_trades_table_builder.EnableRefreshButton(false);
-    pending_trades_table_builder.EnableBookmarksButton(false);
-    pending_trades_table_builder.EnableExportButton(true);
+    pending_orders_table_builder.SetIdColumn("order");
+    pending_orders_table_builder.SetOrderBy("order", "DESC");
+    pending_orders_table_builder.EnableAutoSave(false);
+    pending_orders_table_builder.EnableRefreshButton(false);
+    pending_orders_table_builder.EnableBookmarksButton(false);
+    pending_orders_table_builder.EnableExportButton(true);
+    pending_orders_table_builder.EnableTotal(true);
+    pending_orders_table_builder.SetTotalDataTitle("TOTAL");
 
-    pending_trades_table_builder.AddColumn({"order", "ORDER", 1, search_filter});
-    pending_trades_table_builder.AddColumn({"symbol", "SYMBOL", 2, search_filter});
-    pending_trades_table_builder.AddColumn({"login", "LOGIN", 3, search_filter});
-    pending_trades_table_builder.AddColumn({"type", "ORDER_TYPE", 4, search_filter});
-    pending_trades_table_builder.AddColumn({"volume", "VOLUME", 5, search_filter});
-    pending_trades_table_builder.AddColumn({"open_time", "OPEN_TIME", 6, date_time_filter});
-    pending_trades_table_builder.AddColumn(
+    pending_orders_table_builder.AddColumn({"order", "ORDER", 1, search_filter});
+    pending_orders_table_builder.AddColumn({"symbol", "SYMBOL", 2, search_filter});
+    pending_orders_table_builder.AddColumn({"login", "LOGIN", 3, search_filter});
+    pending_orders_table_builder.AddColumn({"type", "ORDER_TYPE", 4, search_filter});
+    pending_orders_table_builder.AddColumn({"volume", "VOLUME", 5, search_filter});
+    pending_orders_table_builder.AddColumn({"open_time", "OPEN_TIME", 6, date_time_filter});
+    pending_orders_table_builder.AddColumn(
         {"activation_price", "ACTIVATION_PRICE", 7, search_filter});
-    pending_trades_table_builder.AddColumn({"market_price", "MARKET_PRICE", 8, search_filter});
-    pending_trades_table_builder.AddColumn({"sl", "S / L", 9, search_filter});
-    pending_trades_table_builder.AddColumn({"tp", "T / P", 10, search_filter});
-    pending_trades_table_builder.AddColumn({"expiration", "EXPIRATION", 11, date_time_filter});
-    pending_trades_table_builder.AddColumn({"comment", "COMMENT", 12, search_filter});
+    pending_orders_table_builder.AddColumn({"market_price", "MARKET_PRICE", 8, search_filter});
+    pending_orders_table_builder.AddColumn({"sl", "S / L", 9, search_filter});
+    pending_orders_table_builder.AddColumn({"tp", "T / P", 10, search_filter});
+    pending_orders_table_builder.AddColumn({"expiration", "EXPIRATION", 11, date_time_filter});
+    pending_orders_table_builder.AddColumn({"comment", "COMMENT", 12, search_filter});
 
     for (const auto& pending_trade : pending_trades_vector) {
         double       multiplier = 1; // For USD
@@ -272,9 +238,10 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
             std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
         }
 
-        double market_price = utils::GetMarketPriceByCmd(pending_trade.cmd, symbol_record);
+        pending_orders_total_map["USD"].volume += pending_trade.volume;
 
-        pending_trades_table_builder.AddRow(
+        double market_price = utils::GetMarketPriceByCmd(pending_trade.cmd, symbol_record);
+        pending_orders_table_builder.AddRow(
             {utils::TruncateDouble(pending_trade.order, 0),
              pending_trade.symbol,
              std::to_string(pending_trade.login),
@@ -289,17 +256,98 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
              pending_trade.comment});
     }
 
-    const JSONObject pending_trades_table_props = pending_trades_table_builder.CreateTableProps();
+    JSONArray pending_orders_total_array;
+    pending_orders_total_array.emplace_back(JSONObject{
+        {"volume", utils::TruncateDouble(pending_orders_total_map["USD"].volume / 100.0, 2)}});
+    pending_orders_table_builder.SetTotalData(pending_orders_total_array);
+
+    const JSONObject pending_trades_table_props = pending_orders_table_builder.CreateTableProps();
     const Node       pending_trades_table_node  = Table({}, pending_trades_table_props);
 
+    // Close orders table
+    TableBuilder closed_orders_table_builder("AccountClosedOrdersTable");
+
+    closed_orders_table_builder.SetIdColumn("order");
+    closed_orders_table_builder.SetOrderBy("order", "DESC");
+    closed_orders_table_builder.EnableAutoSave(false);
+    closed_orders_table_builder.EnableRefreshButton(false);
+    closed_orders_table_builder.EnableBookmarksButton(false);
+    closed_orders_table_builder.EnableExportButton(true);
+    closed_orders_table_builder.EnableTotal(true);
+    closed_orders_table_builder.SetTotalDataTitle("TOTAL");
+
+    closed_orders_table_builder.AddColumn({"order", "ORDER", 1, search_filter});
+    closed_orders_table_builder.AddColumn({"symbol", "SYMBOL", 7, search_filter});
+    closed_orders_table_builder.AddColumn({"login", "LOGIN", 2, search_filter});
+    closed_orders_table_builder.AddColumn({"type", "ORDER_TYPE", 6, search_filter});
+    closed_orders_table_builder.AddColumn({"volume", "VOLUME", 8, search_filter});
+    closed_orders_table_builder.AddColumn({"open_time", "OPEN_TIME", 4, date_time_filter});
+    closed_orders_table_builder.AddColumn({"open_price", "OPEN_PRICE", 9, search_filter});
+    closed_orders_table_builder.AddColumn({"close_time", "CLOSE_TIME", 5, date_time_filter});
+    closed_orders_table_builder.AddColumn({"close_price", "CLOSE_PRICE", 10, search_filter});
+    closed_orders_table_builder.AddColumn({"profit", "GROSS_PROFIT", 15, search_filter});
+    closed_orders_table_builder.AddColumn({"sl", "S / L", 11, search_filter});
+    closed_orders_table_builder.AddColumn({"tp", "T / P", 12, search_filter});
+    closed_orders_table_builder.AddColumn({"commission", "COMMISSION", 13, search_filter});
+    closed_orders_table_builder.AddColumn({"storage", "SWAP", 14, search_filter});
+    closed_orders_table_builder.AddColumn({"comment", "COMMENT", 17, search_filter});
+
+    for (const auto& closed_trade : closed_trades_vector) {
+        double multiplier = 1;
+
+        if (group_record.currency != "USD") {
+            try {
+                server->CalculateConvertRateByCurrency(
+                    group_record.currency, "USD", closed_trade.cmd, &multiplier);
+            } catch (const std::exception& e) {
+                std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
+            }
+        }
+
+        closed_orders_total_map["USD"].volume += closed_trade.volume;
+        closed_orders_total_map["USD"].profit += closed_trade.profit * multiplier;
+        closed_orders_total_map["USD"].commission += closed_trade.commission * multiplier;
+        closed_orders_total_map["USD"].storage += closed_trade.storage * multiplier;
+
+        closed_orders_table_builder.AddRow(
+            {utils::TruncateDouble(closed_trade.order, 0),
+             closed_trade.symbol,
+             std::to_string(closed_trade.login),
+             utils::ConvertCmdToString(closed_trade.cmd),
+             utils::TruncateDouble(closed_trade.volume / 100.0, 2),
+             utils::FormatTimestampToString(closed_trade.open_time),
+             utils::TruncateDouble(closed_trade.open_price * multiplier, 2),
+             utils::FormatTimestampToString(closed_trade.close_time),
+             utils::TruncateDouble(closed_trade.close_price * multiplier, 2),
+             utils::TruncateDouble(closed_trade.profit * multiplier, 2),
+             utils::TruncateDouble(closed_trade.sl, 2),
+             utils::TruncateDouble(closed_trade.tp, 2),
+             utils::TruncateDouble(closed_trade.commission * multiplier, 2),
+             utils::TruncateDouble(closed_trade.storage * multiplier, 2),
+             closed_trade.comment});
+    }
+
+    JSONArray closed_orders_total_array;
+    closed_orders_total_array.emplace_back(JSONObject{
+        {"volume", utils::TruncateDouble(closed_orders_total_map["USD"].volume / 100.0, 2)},
+        {"profit", utils::TruncateDouble(closed_orders_total_map["USD"].profit, 2)},
+        {"commission", utils::TruncateDouble(closed_orders_total_map["USD"].commission, 2)},
+        {"storage", utils::TruncateDouble(closed_orders_total_map["USD"].storage, 2)}});
+    closed_orders_table_builder.SetTotalData(closed_orders_total_array);
+
+    const JSONObject closed_orders_table_props = closed_orders_table_builder.CreateTableProps();
+    const Node       closed_orders_table_node  = Table({}, closed_orders_table_props);
+
     // Transactions table
-    TableBuilder transactions_table_builder("CreditFacilityReport");
+    TableBuilder transactions_table_builder("AccountTransactionsTable");
 
     transactions_table_builder.SetIdColumn("order");
     transactions_table_builder.SetOrderBy("order", "DESC");
     transactions_table_builder.EnableRefreshButton(false);
     transactions_table_builder.EnableBookmarksButton(false);
     transactions_table_builder.EnableExportButton(true);
+    pending_orders_table_builder.EnableTotal(true);
+    pending_orders_table_builder.SetTotalDataTitle("TOTAL");
 
     transactions_table_builder.AddColumn({"transaction", "TRANSACTION", 1, search_filter});
     transactions_table_builder.AddColumn({"login", "LOGIN", 2, search_filter});
@@ -321,6 +369,8 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
             }
         }
 
+        transactions_total_map["USD"].profit += trx.profit * multiplier;
+
         transactions_table_builder.AddRow({utils::TruncateDouble(trx.order, 0),
                                            std::to_string(account_record.login),
                                            account_record.name,
@@ -329,6 +379,11 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
                                            utils::FormatTimestampToString(trx.open_time),
                                            trx.comment});
     }
+
+    JSONArray transactions_total_array;
+    transactions_total_array.emplace_back(
+        JSONObject{{"profit", utils::TruncateDouble(transactions_total_map["USD"].profit, 2)}});
+    transactions_table_builder.SetTotalData(transactions_total_array);
 
     const JSONObject transactions_table_props = transactions_table_builder.CreateTableProps();
     const Node       transactions_table_node  = Table({}, transactions_table_props);
