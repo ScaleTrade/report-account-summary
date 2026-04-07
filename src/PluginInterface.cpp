@@ -391,12 +391,12 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     // Total report
     const Node report = Column({h1({text("Account Summary Report")}),
                                 main_info,
-                                h2({text("Closed Orders")}),
-                                closed_orders_table_node,
                                 h2({text("Open Orders")}),
                                 open_orders_table_node,
                                 h2({text("Pending Orders")}),
                                 pending_trades_table_node,
+                                h2({text("Closed Orders")}),
+                                closed_orders_table_node,
                                 h2({text("Finance History")}),
                                 transactions_table_node});
     utils::CreateUI(report, response, allocator);
