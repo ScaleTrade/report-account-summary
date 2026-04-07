@@ -346,8 +346,8 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     transactions_table_builder.EnableRefreshButton(false);
     transactions_table_builder.EnableBookmarksButton(false);
     transactions_table_builder.EnableExportButton(true);
-    pending_orders_table_builder.EnableTotal(true);
-    pending_orders_table_builder.SetTotalDataTitle("TOTAL");
+    transactions_table_builder.EnableTotal(true);
+    transactions_table_builder.SetTotalDataTitle("TOTAL");
 
     transactions_table_builder.AddColumn({"transaction", "TRANSACTION", 1, search_filter});
     transactions_table_builder.AddColumn({"login", "LOGIN", 2, search_filter});
