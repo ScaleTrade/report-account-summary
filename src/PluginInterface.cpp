@@ -301,12 +301,13 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     transactions_table_builder.EnableBookmarksButton(false);
     transactions_table_builder.EnableExportButton(true);
 
-    transactions_table_builder.AddColumn({"order", "ORDER", 1, search_filter});
-    transactions_table_builder.AddColumn({"type", "TYPE", 2, search_filter});
-    transactions_table_builder.AddColumn({"open_time", "OPEN_TIME", 3, date_time_filter});
-    transactions_table_builder.AddColumn({"comment", "COMMENT", 4, search_filter});
+    transactions_table_builder.AddColumn({"transaction", "TRANSACTION", 1, search_filter});
+    transactions_table_builder.AddColumn({"login", "LOGIN", 2, search_filter});
+    transactions_table_builder.AddColumn({"name", "NAME", 3, search_filter});
+    transactions_table_builder.AddColumn({"type", "TRANSACTION_TYPE", 4, search_filter});
     transactions_table_builder.AddColumn({"profit", "AMOUNT", 5, search_filter});
-    transactions_table_builder.AddColumn({"currency", "CURRENCY", 6, search_filter});
+    transactions_table_builder.AddColumn({"open_time", "CREATION_TIME", 6, date_time_filter});
+    transactions_table_builder.AddColumn({"comment", "COMMENT", 7, search_filter});
 
     for (const auto& trx : transactions_vector) {
         double multiplier = 1; // For USD
@@ -321,11 +322,12 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
         }
 
         transactions_table_builder.AddRow({utils::TruncateDouble(trx.order, 0),
+                                           std::to_string(account_record.login),
+                                           account_record.name,
                                            utils::ConvertCmdToString(trx.cmd),
-                                           utils::FormatTimestampToString(trx.open_time),
-                                           trx.comment,
                                            utils::TruncateDouble(trx.profit * multiplier, 2),
-                                           "USD"});
+                                           utils::FormatTimestampToString(trx.timestamp),
+                                           trx.comment});
     }
 
     const JSONObject transactions_table_props = transactions_table_builder.CreateTableProps();
