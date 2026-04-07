@@ -150,7 +150,7 @@ public:
         table_props["showExportBtn"] = _is_export_button_enabled;
         table_props["showTotal"] = _is_total_row_enabled;
         table_props["totalDataTitle"] = _total_data_title;
-        // table_props["limit"] = JSONValue(static_cast<double>(_limit));
+        table_props["limit"] = static_cast<double>(_limit);
 
         if (!_total_data.empty()) {
             table_props["totalData"] = _total_data;

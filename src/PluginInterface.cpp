@@ -122,6 +122,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     open_orders_table_builder.EnableRefreshButton(false);
     open_orders_table_builder.EnableBookmarksButton(false);
     open_orders_table_builder.EnableExportButton(true);
+    open_orders_table_builder.SetLimit(0);
     open_orders_table_builder.EnableTotal(true);
     open_orders_table_builder.SetTotalDataTitle("TOTAL");
 
@@ -202,6 +203,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     pending_orders_table_builder.EnableRefreshButton(false);
     pending_orders_table_builder.EnableBookmarksButton(false);
     pending_orders_table_builder.EnableExportButton(true);
+    pending_orders_table_builder.SetLimit(0);
     pending_orders_table_builder.EnableTotal(true);
     pending_orders_table_builder.SetTotalDataTitle("TOTAL");
 
@@ -273,6 +275,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     closed_orders_table_builder.EnableRefreshButton(false);
     closed_orders_table_builder.EnableBookmarksButton(false);
     closed_orders_table_builder.EnableExportButton(true);
+    closed_orders_table_builder.SetLimit(0);
     closed_orders_table_builder.EnableTotal(true);
     closed_orders_table_builder.SetTotalDataTitle("TOTAL");
 
@@ -346,6 +349,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     transactions_table_builder.EnableRefreshButton(false);
     transactions_table_builder.EnableBookmarksButton(false);
     transactions_table_builder.EnableExportButton(true);
+    transactions_table_builder.SetLimit(0);
     transactions_table_builder.EnableTotal(true);
     transactions_table_builder.SetTotalDataTitle("TOTAL");
 
