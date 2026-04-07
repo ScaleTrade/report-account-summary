@@ -47,6 +47,36 @@ namespace utils {
 
             Value children(kArrayType);
 
+            // Export PDF Button
+            Value export_btn_object(kObjectType);
+            export_btn_object.AddMember("type", "Button", allocator);
+
+            Value export_btn_props_object(kObjectType);
+            export_btn_props_object.AddMember("className", "form_action_button", allocator);
+            export_btn_props_object.AddMember("buttonType", "primary", allocator);
+            export_btn_props_object.AddMember("loading", "{{isExportLoading}}", allocator);
+            export_btn_props_object.AddMember(
+                "onClick",
+                "({self}) => {\n self?.exportPdf('account-summary-report');\n} ",
+                allocator);
+
+            export_btn_object.AddMember("props", export_btn_props_object, allocator);
+
+            Value export_btn_children(kArrayType);
+
+            Value export_text_object(kObjectType);
+            export_text_object.AddMember("type", "#text", allocator);
+
+            Value export_text_props_object(kObjectType);
+            export_text_props_object.AddMember("value", "Export pdf", allocator);
+
+            export_text_object.AddMember("props", export_text_props_object, allocator);
+            export_btn_children.PushBack(export_text_object, allocator);
+
+            export_btn_object.AddMember("children", export_btn_children, allocator);
+
+            children.PushBack(export_btn_object, allocator);
+
             // Close Button
             Value btn_object(kObjectType);
             btn_object.AddMember("type", "Button", allocator);
@@ -78,36 +108,6 @@ namespace utils {
             space_object.AddMember("children", children, allocator);
 
             footer_array.PushBack(space_object, allocator);
-
-            // Export PDF Button
-            Value export_btn_object(kObjectType);
-            export_btn_object.AddMember("type", "Button", allocator);
-
-            Value export_btn_props_object(kObjectType);
-            export_btn_props_object.AddMember("className", "form_action_button", allocator);
-            export_btn_props_object.AddMember("buttonType", "primary", allocator);
-            export_btn_props_object.AddMember("loading", "{{isExportLoading}}", allocator);
-            export_btn_props_object.AddMember(
-                "onClick",
-                "({self}) => {\n self?.exportPdf('account-summary-report');\n} ",
-                allocator);
-
-            export_btn_object.AddMember("props", export_btn_props_object, allocator);
-
-            Value export_btn_children(kArrayType);
-
-            Value export_text_object(kObjectType);
-            export_text_object.AddMember("type", "#text", allocator);
-
-            Value export_text_props_object(kObjectType);
-            export_text_props_object.AddMember("value", "Export pdf", allocator);
-
-            export_text_object.AddMember("props", export_text_props_object, allocator);
-            export_btn_children.PushBack(export_text_object, allocator);
-
-            export_btn_object.AddMember("children", export_btn_children, allocator);
-
-            children.PushBack(export_btn_object, allocator);
         }
 
         // Modal
