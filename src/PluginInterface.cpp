@@ -326,7 +326,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
                                            account_record.name,
                                            utils::ConvertCmdToString(trx.cmd),
                                            utils::TruncateDouble(trx.profit * multiplier, 2),
-                                           utils::FormatTimestampToString(trx.timestamp),
+                                           utils::FormatTimestampToString(trx.open_time),
                                            trx.comment});
     }
 
