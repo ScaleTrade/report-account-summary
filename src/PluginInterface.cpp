@@ -183,12 +183,12 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     }
 
     JSONArray open_orders_total_array;
-    open_orders_total_array.emplace_back(JSONObject{
-        {"volume", utils::TruncateDouble(open_orders_total_map["USD"].volume / 100.0, 2)},
-        {"profit", utils::TruncateDouble(open_orders_total_map["USD"].profit, 2)},
-        {"commission", utils::TruncateDouble(open_orders_total_map["USD"].commission, 2)},
-        {"storage", utils::TruncateDouble(open_orders_total_map["USD"].storage, 2)}});
-    open_orders_table_builder.SetTotalData(open_orders_total_array);
+    // open_orders_total_array.emplace_back(JSONObject{
+    //     {"volume", utils::TruncateDouble(open_orders_total_map["USD"].volume / 100.0, 2)},
+    //     {"profit", utils::TruncateDouble(open_orders_total_map["USD"].profit, 2)},
+    //     {"commission", utils::TruncateDouble(open_orders_total_map["USD"].commission, 2)},
+    //     {"storage", utils::TruncateDouble(open_orders_total_map["USD"].storage, 2)}});
+    // open_orders_table_builder.SetTotalData(open_orders_total_array);
 
     const JSONObject open_orders_table_props = open_orders_table_builder.CreateTableProps();
     const Node       open_orders_table_node  = Table({}, open_orders_table_props);
@@ -257,9 +257,9 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     }
 
     JSONArray pending_orders_total_array;
-    pending_orders_total_array.emplace_back(JSONObject{
-        {"volume", utils::TruncateDouble(pending_orders_total_map["USD"].volume / 100.0, 2)}});
-    pending_orders_table_builder.SetTotalData(pending_orders_total_array);
+    // pending_orders_total_array.emplace_back(JSONObject{
+    //     {"volume", utils::TruncateDouble(pending_orders_total_map["USD"].volume / 100.0, 2)}});
+    // pending_orders_table_builder.SetTotalData(pending_orders_total_array);
 
     const JSONObject pending_trades_table_props = pending_orders_table_builder.CreateTableProps();
     const Node       pending_trades_table_node  = Table({}, pending_trades_table_props);
@@ -328,12 +328,12 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     }
 
     JSONArray closed_orders_total_array;
-    closed_orders_total_array.emplace_back(JSONObject{
-        {"volume", utils::TruncateDouble(closed_orders_total_map["USD"].volume / 100.0, 2)},
-        {"profit", utils::TruncateDouble(closed_orders_total_map["USD"].profit, 2)},
-        {"commission", utils::TruncateDouble(closed_orders_total_map["USD"].commission, 2)},
-        {"storage", utils::TruncateDouble(closed_orders_total_map["USD"].storage, 2)}});
-    closed_orders_table_builder.SetTotalData(closed_orders_total_array);
+    // closed_orders_total_array.emplace_back(JSONObject{
+    //     {"volume", utils::TruncateDouble(closed_orders_total_map["USD"].volume / 100.0, 2)},
+    //     {"profit", utils::TruncateDouble(closed_orders_total_map["USD"].profit, 2)},
+    //     {"commission", utils::TruncateDouble(closed_orders_total_map["USD"].commission, 2)},
+    //     {"storage", utils::TruncateDouble(closed_orders_total_map["USD"].storage, 2)}});
+    // closed_orders_table_builder.SetTotalData(closed_orders_total_array);
 
     const JSONObject closed_orders_table_props = closed_orders_table_builder.CreateTableProps();
     const Node       closed_orders_table_node  = Table({}, closed_orders_table_props);
@@ -381,9 +381,9 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     }
 
     JSONArray transactions_total_array;
-    transactions_total_array.emplace_back(
-        JSONObject{{"profit", utils::TruncateDouble(transactions_total_map["USD"].profit, 2)}});
-    transactions_table_builder.SetTotalData(transactions_total_array);
+    // transactions_total_array.emplace_back(
+    //     JSONObject{{"profit", utils::TruncateDouble(transactions_total_map["USD"].profit, 2)}});
+    // transactions_table_builder.SetTotalData(transactions_total_array);
 
     const JSONObject transactions_table_props = transactions_table_builder.CreateTableProps();
     const Node       transactions_table_node  = Table({}, transactions_table_props);
