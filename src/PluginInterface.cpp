@@ -170,9 +170,9 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
              utils::ConvertCmdToString(open_trade.cmd),
              utils::TruncateDouble(open_trade.volume / 100.0, 2),
              utils::FormatTimestampToString(open_trade.open_time),
-             utils::TruncateDouble(open_trade.open_price * multiplier, 5),
-             utils::TruncateDouble(market_price * multiplier, 5),
-             utils::TruncateDouble(open_trade.profit * multiplier, 5),
+             utils::TruncateDouble(open_trade.open_price * multiplier, open_trade.digits),
+             utils::TruncateDouble(market_price * multiplier, open_trade.digits),
+             utils::TruncateDouble(open_trade.profit * multiplier, 2),
              utils::TruncateDouble(open_trade.sl * multiplier, 5),
              utils::TruncateDouble(open_trade.tp * multiplier, 5),
              utils::TruncateDouble(open_trade.commission * multiplier, 2),
@@ -183,7 +183,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     JSONArray open_orders_total_array;
     open_orders_total_array.emplace_back(JSONObject{
         {"volume", utils::TruncateDouble(open_orders_total_map["USD"].volume / 100.0, 2)},
-        {"profit", utils::TruncateDouble(open_orders_total_map["USD"].profit, 5)},
+        {"profit", utils::TruncateDouble(open_orders_total_map["USD"].profit, 2)},
         {"commission", utils::TruncateDouble(open_orders_total_map["USD"].commission, 2)},
         {"storage", utils::TruncateDouble(open_orders_total_map["USD"].storage, 2)}});
     open_orders_table_builder.SetTotalData(open_orders_total_array);
@@ -247,8 +247,8 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
              utils::ConvertCmdToString(pending_trade.cmd),
              utils::TruncateDouble(pending_trade.volume / 100.0, 2),
              utils::FormatTimestampToString(pending_trade.open_time),
-             utils::TruncateDouble(pending_trade.open_price * multiplier, 5),
-             utils::TruncateDouble(market_price * multiplier, 5),
+             utils::TruncateDouble(pending_trade.open_price * multiplier, pending_trade.digits),
+             utils::TruncateDouble(market_price * multiplier, pending_trade.digits),
              utils::TruncateDouble(pending_trade.sl * multiplier, 5),
              utils::TruncateDouble(pending_trade.tp * multiplier, 5),
              utils::FormatTimestampToString(pending_trade.expiration),
@@ -316,10 +316,10 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
              utils::ConvertCmdToString(closed_trade.cmd),
              utils::TruncateDouble(closed_trade.volume / 100.0, 2),
              utils::FormatTimestampToString(closed_trade.open_time),
-             utils::TruncateDouble(closed_trade.open_price * multiplier, 5),
+             utils::TruncateDouble(closed_trade.open_price * multiplier, closed_trade.digits),
              utils::FormatTimestampToString(closed_trade.close_time),
-             utils::TruncateDouble(closed_trade.close_price * multiplier, 5),
-             utils::TruncateDouble(closed_trade.profit * multiplier, 5),
+             utils::TruncateDouble(closed_trade.close_price * multiplier, closed_trade.digits),
+             utils::TruncateDouble(closed_trade.profit * multiplier, 2),
              utils::TruncateDouble(closed_trade.sl, 5),
              utils::TruncateDouble(closed_trade.tp, 5),
              utils::TruncateDouble(closed_trade.commission * multiplier, 2),
@@ -330,7 +330,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     JSONArray closed_orders_total_array;
     closed_orders_total_array.emplace_back(JSONObject{
         {"volume", utils::TruncateDouble(closed_orders_total_map["USD"].volume / 100.0, 2)},
-        {"profit", utils::TruncateDouble(closed_orders_total_map["USD"].profit, 5)},
+        {"profit", utils::TruncateDouble(closed_orders_total_map["USD"].profit, 2)},
         {"commission", utils::TruncateDouble(closed_orders_total_map["USD"].commission, 2)},
         {"storage", utils::TruncateDouble(closed_orders_total_map["USD"].storage, 2)}});
     closed_orders_table_builder.SetTotalData(closed_orders_total_array);
@@ -376,14 +376,14 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
                                            std::to_string(account_record.login),
                                            account_record.name,
                                            utils::ConvertCmdToString(trx.cmd),
-                                           utils::TruncateDouble(trx.profit * multiplier, 5),
+                                           utils::TruncateDouble(trx.profit * multiplier, 2),
                                            utils::FormatTimestampToString(trx.open_time),
                                            trx.comment});
     }
 
     JSONArray transactions_total_array;
     transactions_total_array.emplace_back(
-        JSONObject{{"profit", utils::TruncateDouble(transactions_total_map["USD"].profit, 5)}});
+        JSONObject{{"profit", utils::TruncateDouble(transactions_total_map["USD"].profit, 2)}});
     transactions_table_builder.SetTotalData(transactions_total_array);
 
     const JSONObject transactions_table_props = transactions_table_builder.CreateTableProps();
