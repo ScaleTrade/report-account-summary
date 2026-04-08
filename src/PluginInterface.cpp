@@ -170,11 +170,11 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
              utils::ConvertCmdToString(open_trade.cmd),
              utils::TruncateDouble(open_trade.volume / 100.0, 2),
              utils::FormatTimestampToString(open_trade.open_time),
-             utils::TruncateDouble(open_trade.open_price * multiplier, 2),
-             utils::TruncateDouble(market_price * multiplier, 2),
-             utils::TruncateDouble(open_trade.profit * multiplier, 2),
-             utils::TruncateDouble(open_trade.sl * multiplier, 2),
-             utils::TruncateDouble(open_trade.tp * multiplier, 2),
+             utils::TruncateDouble(open_trade.open_price * multiplier, 5),
+             utils::TruncateDouble(market_price * multiplier, 5),
+             utils::TruncateDouble(open_trade.profit * multiplier, 5),
+             utils::TruncateDouble(open_trade.sl * multiplier, 5),
+             utils::TruncateDouble(open_trade.tp * multiplier, 5),
              utils::TruncateDouble(open_trade.commission * multiplier, 2),
              utils::TruncateDouble(open_trade.storage * multiplier, 2),
              open_trade.comment});
@@ -183,7 +183,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     JSONArray open_orders_total_array;
     open_orders_total_array.emplace_back(JSONObject{
         {"volume", utils::TruncateDouble(open_orders_total_map["USD"].volume / 100.0, 2)},
-        {"profit", utils::TruncateDouble(open_orders_total_map["USD"].profit, 2)},
+        {"profit", utils::TruncateDouble(open_orders_total_map["USD"].profit, 5)},
         {"commission", utils::TruncateDouble(open_orders_total_map["USD"].commission, 2)},
         {"storage", utils::TruncateDouble(open_orders_total_map["USD"].storage, 2)}});
     open_orders_table_builder.SetTotalData(open_orders_total_array);
@@ -247,10 +247,10 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
              utils::ConvertCmdToString(pending_trade.cmd),
              utils::TruncateDouble(pending_trade.volume / 100.0, 2),
              utils::FormatTimestampToString(pending_trade.open_time),
-             utils::TruncateDouble(pending_trade.open_price * multiplier, 2),
-             utils::TruncateDouble(market_price * multiplier, 2),
-             utils::TruncateDouble(pending_trade.sl * multiplier, 2),
-             utils::TruncateDouble(pending_trade.tp * multiplier, 2),
+             utils::TruncateDouble(pending_trade.open_price * multiplier, 5),
+             utils::TruncateDouble(market_price * multiplier, 5),
+             utils::TruncateDouble(pending_trade.sl * multiplier, 5),
+             utils::TruncateDouble(pending_trade.tp * multiplier, 5),
              utils::FormatTimestampToString(pending_trade.expiration),
              pending_trade.comment});
     }
@@ -277,20 +277,20 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     closed_orders_table_builder.SetTotalDataTitle("TOTAL");
 
     closed_orders_table_builder.AddColumn({"order", "ORDER", 1, search_filter});
-    closed_orders_table_builder.AddColumn({"symbol", "SYMBOL", 7, search_filter});
-    closed_orders_table_builder.AddColumn({"login", "LOGIN", 2, search_filter});
-    closed_orders_table_builder.AddColumn({"type", "ORDER_TYPE", 6, search_filter});
-    closed_orders_table_builder.AddColumn({"volume", "VOLUME", 8, search_filter});
-    closed_orders_table_builder.AddColumn({"open_time", "OPEN_TIME", 4, date_time_filter});
-    closed_orders_table_builder.AddColumn({"open_price", "OPEN_PRICE", 9, search_filter});
-    closed_orders_table_builder.AddColumn({"close_time", "CLOSE_TIME", 5, date_time_filter});
-    closed_orders_table_builder.AddColumn({"close_price", "CLOSE_PRICE", 10, search_filter});
-    closed_orders_table_builder.AddColumn({"profit", "GROSS_PROFIT", 15, search_filter});
+    closed_orders_table_builder.AddColumn({"symbol", "SYMBOL", 2, search_filter});
+    closed_orders_table_builder.AddColumn({"login", "LOGIN", 3, search_filter});
+    closed_orders_table_builder.AddColumn({"type", "ORDER_TYPE", 4, search_filter});
+    closed_orders_table_builder.AddColumn({"volume", "VOLUME", 5, search_filter});
+    closed_orders_table_builder.AddColumn({"open_time", "OPEN_TIME", 6, date_time_filter});
+    closed_orders_table_builder.AddColumn({"open_price", "OPEN_PRICE", 7, search_filter});
+    closed_orders_table_builder.AddColumn({"close_time", "CLOSE_TIME", 8, date_time_filter});
+    closed_orders_table_builder.AddColumn({"close_price", "CLOSE_PRICE", 9, search_filter});
+    closed_orders_table_builder.AddColumn({"profit", "GROSS_PROFIT", 10, search_filter});
     closed_orders_table_builder.AddColumn({"sl", "S / L", 11, search_filter});
     closed_orders_table_builder.AddColumn({"tp", "T / P", 12, search_filter});
     closed_orders_table_builder.AddColumn({"commission", "COMMISSION", 13, search_filter});
     closed_orders_table_builder.AddColumn({"storage", "SWAP", 14, search_filter});
-    closed_orders_table_builder.AddColumn({"comment", "COMMENT", 17, search_filter});
+    closed_orders_table_builder.AddColumn({"comment", "COMMENT", 15, search_filter});
 
     for (const auto& closed_trade : closed_trades_vector) {
         double multiplier = 1;
@@ -316,12 +316,12 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
              utils::ConvertCmdToString(closed_trade.cmd),
              utils::TruncateDouble(closed_trade.volume / 100.0, 2),
              utils::FormatTimestampToString(closed_trade.open_time),
-             utils::TruncateDouble(closed_trade.open_price * multiplier, 2),
+             utils::TruncateDouble(closed_trade.open_price * multiplier, 5),
              utils::FormatTimestampToString(closed_trade.close_time),
-             utils::TruncateDouble(closed_trade.close_price * multiplier, 2),
-             utils::TruncateDouble(closed_trade.profit * multiplier, 2),
-             utils::TruncateDouble(closed_trade.sl, 2),
-             utils::TruncateDouble(closed_trade.tp, 2),
+             utils::TruncateDouble(closed_trade.close_price * multiplier, 5),
+             utils::TruncateDouble(closed_trade.profit * multiplier, 5),
+             utils::TruncateDouble(closed_trade.sl, 5),
+             utils::TruncateDouble(closed_trade.tp, 5),
              utils::TruncateDouble(closed_trade.commission * multiplier, 2),
              utils::TruncateDouble(closed_trade.storage * multiplier, 2),
              closed_trade.comment});
@@ -330,7 +330,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     JSONArray closed_orders_total_array;
     closed_orders_total_array.emplace_back(JSONObject{
         {"volume", utils::TruncateDouble(closed_orders_total_map["USD"].volume / 100.0, 2)},
-        {"profit", utils::TruncateDouble(closed_orders_total_map["USD"].profit, 2)},
+        {"profit", utils::TruncateDouble(closed_orders_total_map["USD"].profit, 5)},
         {"commission", utils::TruncateDouble(closed_orders_total_map["USD"].commission, 2)},
         {"storage", utils::TruncateDouble(closed_orders_total_map["USD"].storage, 2)}});
     closed_orders_table_builder.SetTotalData(closed_orders_total_array);
@@ -376,14 +376,14 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
                                            std::to_string(account_record.login),
                                            account_record.name,
                                            utils::ConvertCmdToString(trx.cmd),
-                                           utils::TruncateDouble(trx.profit * multiplier, 2),
+                                           utils::TruncateDouble(trx.profit * multiplier, 5),
                                            utils::FormatTimestampToString(trx.open_time),
                                            trx.comment});
     }
 
     JSONArray transactions_total_array;
     transactions_total_array.emplace_back(
-        JSONObject{{"profit", utils::TruncateDouble(transactions_total_map["USD"].profit, 2)}});
+        JSONObject{{"profit", utils::TruncateDouble(transactions_total_map["USD"].profit, 5)}});
     transactions_table_builder.SetTotalData(transactions_total_array);
 
     const JSONObject transactions_table_props = transactions_table_builder.CreateTableProps();
