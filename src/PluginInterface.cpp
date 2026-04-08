@@ -85,16 +85,13 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
             {{"style", "font-size: 14px"}});
 
     auto right_column = div(
-        {p({span({text("Balance: ")}),
-            span({text(std::to_string(utils::TruncateDouble(margin_level.balance, 2)))})}),
-         p({span({text("Equity: ")}),
-            span({text(std::to_string(utils::TruncateDouble(margin_level.equity, 2)))})}),
-         p({span({text("Margin: ")}),
-            span({text(std::to_string(utils::TruncateDouble(margin_level.margin, 2)))})}),
+        {p({span({text("Balance: ")}), span({text(utils::FormatDouble(margin_level.balance, 2))})}),
+         p({span({text("Equity: ")}), span({text(utils::FormatDouble(margin_level.equity, 2))})}),
+         p({span({text("Margin: ")}), span({text(utils::FormatDouble(margin_level.margin, 2))})}),
          p({span({text("Free Margin: ")}),
-            span({text(std::to_string(utils::TruncateDouble(margin_level.margin_free, 2)))})}),
+            span({text(utils::FormatDouble(margin_level.margin_free, 2))})}),
          p({span({text("Margin Level: ")}),
-            span({text(std::to_string(utils::TruncateDouble(margin_level.margin_level, 2)))})})},
+            span({text(utils::FormatDouble(margin_level.margin_level, 2))})})},
         {{"style", "font-size: 14px"}});
 
     auto main_info = div(

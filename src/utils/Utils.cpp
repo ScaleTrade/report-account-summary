@@ -139,7 +139,13 @@ namespace utils {
         return std::trunc(value * factor) / factor;
     }
 
-    std::string ConvertCmdToString(int cmd) {
+    std::string FormatDouble(const double value, const int digits) {
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(digits) << value;
+        return ss.str();
+    }
+
+    std::string ConvertCmdToString(const int cmd) {
         switch (cmd) {
             case -1:
                 return "Nothing";
@@ -172,7 +178,7 @@ namespace utils {
         }
     }
 
-    double GetMarketPriceByCmd(int cmd, const SymbolRecord& symbol_record) {
+    double GetMarketPriceByCmd(const int cmd, const SymbolRecord& symbol_record) {
         switch (cmd) {
             case 0: // OP_BUY
             case 2: // OP_BUYLIMIT

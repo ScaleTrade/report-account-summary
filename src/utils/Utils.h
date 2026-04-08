@@ -25,8 +25,10 @@ namespace utils {
 
     double TruncateDouble(const double& value, const int& digits);
 
-    std::string ConvertCmdToString(int cmd);
+    std::string FormatDouble(const double value, const int digits);
 
-    double GetMarketPriceByCmd(int cmd, const SymbolRecord& symbol_record);
+    std::string ConvertCmdToString(const int cmd);
+
+    double GetMarketPriceByCmd(const int cmd, const SymbolRecord& symbol_record);
 
 } // namespace utils
