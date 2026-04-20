@@ -4,6 +4,7 @@
 #include <cmath>
 #include <ctime>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
@@ -11,8 +12,8 @@
 #include "ReportServerInterface.h"
 #include "Structures.h"
 #include "ast/Ast.hpp"
+#include "rapidjson/document.h"
 #include "structures/ReportStructures.h"
-#include <rapidjson/document.h>
 
 using namespace ast;
 
