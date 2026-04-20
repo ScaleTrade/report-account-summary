@@ -14,7 +14,6 @@
 #include "rapidjson/document.h"
 #include "utils/Utils.h"
 #include "ReportServerInterface.h"
-#include "Structures.h"
 #include "ast/Ast.hpp"
 #include "sbxTableBuilder/SBXTableBuilder.hpp"
 #include "structures/ReportStructures.h"
