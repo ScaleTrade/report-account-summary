@@ -8,9 +8,10 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "ReportServerInterface.h"
 #include "Structures.h"
 #include "ast/Ast.hpp"
-#include "structures/PluginStructures.h"
+#include "structures/ReportStructures.h"
 #include <rapidjson/document.h>
 
 using namespace ast;
@@ -29,6 +30,6 @@ namespace utils {
 
     std::string ConvertCmdToString(const int cmd);
 
-    double GetMarketPriceByCmd(const int cmd, const SymbolRecord& symbol_record);
+    double GetMarketPriceByCmd(const int cmd, const ReportSymbolRecord& symbol_record);
 
 } // namespace utils

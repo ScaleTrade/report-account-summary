@@ -5,7 +5,7 @@ using namespace ast;
 extern "C" void AboutReport(rapidjson::Value&                   request,
                             rapidjson::Value&                   response,
                             rapidjson::Document::AllocatorType& allocator,
-                            CServerInterface*                   server) {
+                            ReportServerInterface*              server) {
     response.AddMember("version", 1, allocator);
     response.AddMember("name", Value().SetString("Account Summary report", allocator), allocator);
     response.AddMember(
@@ -16,7 +16,8 @@ extern "C" void AboutReport(rapidjson::Value&                   request,
             "pending orders, and financial transactions.",
             allocator),
         allocator);
-    response.AddMember("type", REPORT_RANGE_ACCOUNT_TYPE, allocator);
+    response.AddMember("type", static_cast<int>(ReportType::RangeAccount), allocator);
+    response.AddMember("id", "ACCOUNT_SUMMARY_REPORT", allocator);
 }
 
 extern "C" void DestroyReport() {}
@@ -24,7 +25,7 @@ extern "C" void DestroyReport() {}
 extern "C" void CreateReport(rapidjson::Value&                   request,
                              rapidjson::Value&                   response,
                              rapidjson::Document::AllocatorType& allocator,
-                             CServerInterface*                   server) {
+                             ReportServerInterface*              server) {
     int login = 0;
     int from  = 0;
     int to    = 0;
@@ -38,13 +39,13 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     if (request.HasMember("to") && request["to"].IsInt())
         to = request["to"].GetInt();
 
-    AccountRecord            account_record{};
-    GroupRecord              group_record{};
-    MarginLevel              margin_level{};
-    std::vector<TradeRecord> closed_trades_vector;
-    std::vector<TradeRecord> open_trades_vector;
-    std::vector<TradeRecord> pending_trades_vector;
-    std::vector<TradeRecord> transactions_vector;
+    ReportAccountRecord            account_record{};
+    ReportGroupRecord              group_record{};
+    ReportMarginLevel              margin_level{};
+    std::vector<ReportTradeRecord> closed_trades_vector;
+    std::vector<ReportTradeRecord> open_trades_vector;
+    std::vector<ReportTradeRecord> pending_trades_vector;
+    std::vector<ReportTradeRecord> transactions_vector;
 
     try {
         server->GetAccountByLogin(login, &account_record);
@@ -56,7 +57,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
         server->GetTransactionsByLogin(login, from, to, &transactions_vector);
 
         // Фильтрация для closed_trades_vector
-        std::erase_if(closed_trades_vector, [from, to](const TradeRecord& closed_trade) {
+        std::erase_if(closed_trades_vector, [from, to](const ReportTradeRecord& closed_trade) {
             return !(closed_trade.close_time >= from && closed_trade.close_time <= to);
         });
     } catch (const std::exception& e) {
@@ -139,13 +140,13 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     open_orders_table_builder.AddColumn({"comment", "COMMENT", 14, search_filter});
 
     for (const auto& open_trade : open_trades_vector) {
-        double       multiplier = 1; // for USD
-        SymbolRecord symbol_record{};
+        double             multiplier = 1; // for USD
+        ReportSymbolRecord symbol_record{};
 
         if (group_record.currency != "USD") {
             try {
                 server->CalculateConvertRateByCurrency(
-                    group_record.currency, "USD", open_trade.cmd, &multiplier);
+                    group_record.currency, "USD", static_cast<int>(open_trade.cmd), &multiplier);
             } catch (const std::exception& e) {
                 std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
             }
@@ -162,12 +163,13 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
         open_orders_total_map["USD"].commission += open_trade.commission * multiplier;
         open_orders_total_map["USD"].storage += open_trade.storage * multiplier;
 
-        double market_price = utils::GetMarketPriceByCmd(open_trade.cmd, symbol_record);
+        double market_price =
+            utils::GetMarketPriceByCmd(static_cast<int>(open_trade.cmd), symbol_record);
         open_orders_table_builder.AddRow(
             {utils::TruncateDouble(open_trade.order, 0),
              open_trade.symbol,
              std::to_string(open_trade.login),
-             utils::ConvertCmdToString(open_trade.cmd),
+             utils::ConvertCmdToString(static_cast<int>(open_trade.cmd)),
              utils::TruncateDouble(open_trade.volume / 100.0, 2),
              utils::FormatTimestampToString(open_trade.open_time),
              utils::TruncateDouble(open_trade.open_price * multiplier, open_trade.digits),
@@ -219,13 +221,13 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     pending_orders_table_builder.AddColumn({"comment", "COMMENT", 12, search_filter});
 
     for (const auto& pending_trade : pending_trades_vector) {
-        double       multiplier = 1; // For USD
-        SymbolRecord symbol_record{};
+        double             multiplier = 1; // For USD
+        ReportSymbolRecord symbol_record{};
 
         if (group_record.currency != "USD") {
             try {
                 server->CalculateConvertRateByCurrency(
-                    group_record.currency, "USD", pending_trade.cmd, &multiplier);
+                    group_record.currency, "USD", static_cast<int>(pending_trade.cmd), &multiplier);
             } catch (const std::exception& e) {
                 std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
             }
@@ -239,12 +241,13 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
 
         pending_orders_total_map["USD"].volume += pending_trade.volume;
 
-        double market_price = utils::GetMarketPriceByCmd(pending_trade.cmd, symbol_record);
+        double market_price =
+            utils::GetMarketPriceByCmd(static_cast<int>(pending_trade.cmd), symbol_record);
         pending_orders_table_builder.AddRow(
             {utils::TruncateDouble(pending_trade.order, 0),
              pending_trade.symbol,
              std::to_string(pending_trade.login),
-             utils::ConvertCmdToString(pending_trade.cmd),
+             utils::ConvertCmdToString(static_cast<int>(pending_trade.cmd)),
              utils::TruncateDouble(pending_trade.volume / 100.0, 2),
              utils::FormatTimestampToString(pending_trade.open_time),
              utils::TruncateDouble(pending_trade.open_price * multiplier, pending_trade.digits),
@@ -298,7 +301,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
         if (group_record.currency != "USD") {
             try {
                 server->CalculateConvertRateByCurrency(
-                    group_record.currency, "USD", closed_trade.cmd, &multiplier);
+                    group_record.currency, "USD", static_cast<int>(closed_trade.cmd), &multiplier);
             } catch (const std::exception& e) {
                 std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
             }
@@ -313,7 +316,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
             {utils::TruncateDouble(closed_trade.order, 0),
              closed_trade.symbol,
              std::to_string(closed_trade.login),
-             utils::ConvertCmdToString(closed_trade.cmd),
+             utils::ConvertCmdToString(static_cast<int>(closed_trade.cmd)),
              utils::TruncateDouble(closed_trade.volume / 100.0, 2),
              utils::FormatTimestampToString(closed_trade.open_time),
              utils::TruncateDouble(closed_trade.open_price * multiplier, closed_trade.digits),
@@ -364,7 +367,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
         if (group_record.currency != "USD") {
             try {
                 server->CalculateConvertRateByCurrency(
-                    group_record.currency, "USD", trx.cmd, &multiplier);
+                    group_record.currency, "USD", static_cast<int>(trx.cmd), &multiplier);
             } catch (const std::exception& e) {
                 std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
             }
@@ -375,7 +378,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
         transactions_table_builder.AddRow({utils::TruncateDouble(trx.order, 0),
                                            std::to_string(account_record.login),
                                            account_record.name,
-                                           utils::ConvertCmdToString(trx.cmd),
+                                           utils::ConvertCmdToString(static_cast<int>(trx.cmd)),
                                            utils::TruncateDouble(trx.profit * multiplier, 2),
                                            utils::FormatTimestampToString(trx.open_time),
                                            trx.comment});

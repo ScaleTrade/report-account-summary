@@ -178,16 +178,16 @@ namespace utils {
         }
     }
 
-    double GetMarketPriceByCmd(const int cmd, const SymbolRecord& symbol_record) {
+    double GetMarketPriceByCmd(const int cmd, const ReportSymbolRecord& symbol_record) {
         switch (cmd) {
-            case 0: // OP_BUY
-            case 2: // OP_BUYLIMIT
-            case 4: // OP_BUYSTOP
+            case 0:
+            case 2:
+            case 4:
                 return symbol_record.ask;
 
-            case 1: // OP_SELL
-            case 3: // OP_SELLLIMIT
-            case 5: // OP_SELLSTOP
+            case 1:
+            case 3:
+            case 5:
                 return symbol_record.bid;
 
             default:

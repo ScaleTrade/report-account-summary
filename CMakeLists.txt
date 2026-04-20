@@ -17,7 +17,5 @@ add_library(AccountSummaryReport SHARED ${SOURCES})
 
 target_include_directories(AccountSummaryReport PRIVATE
         ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/api
-        ${CMAKE_SOURCE_DIR}/external
         ${CMAKE_SOURCE_DIR}/src
 )
