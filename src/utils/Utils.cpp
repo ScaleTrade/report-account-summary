@@ -24,7 +24,7 @@ namespace utils {
             text_object.AddMember("type", "#text", allocator);
 
             Value props(kObjectType);
-            props.AddMember("value", "Account Equity report", allocator);
+            props.AddMember("value", "Account Summary report", allocator);
 
             text_object.AddMember("props", props, allocator);
             children.PushBack(text_object, allocator);
@@ -126,6 +126,10 @@ namespace utils {
     }
 
     std::string FormatTimestampToString(const time_t& timestamp, const std::string& format) {
+        if (timestamp <= 0) {
+            return "-";
+        }
+
         std::tm tm{};
         localtime_r(&timestamp, &tm);
 
