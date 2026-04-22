@@ -56,7 +56,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
         server->GetPendingTradesByLogin(login, &pending_trades_vector);
         server->GetTransactionsByLogin(login, from, to, &transactions_vector);
 
-        // Фильтрация для closed_trades_vector
+        // Filtering for closed_trades_vector
         std::erase_if(closed_trades_vector, [from, to](const ReportTradeRecord& closed_trade) {
             return !(closed_trade.close_time >= from && closed_trade.close_time <= to);
         });
@@ -137,20 +137,22 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     open_orders_table_builder.AddColumn({"tp", "T / P", 11, search_filter});
     open_orders_table_builder.AddColumn({"commission", "COMMISSION", 12, search_filter});
     open_orders_table_builder.AddColumn({"storage", "SWAP", 13, search_filter});
-    open_orders_table_builder.AddColumn({"comment", "COMMENT", 14, search_filter});
+    open_orders_table_builder.AddColumn({"currency", "CURRENCY", 14, search_filter});
+    open_orders_table_builder.AddColumn({"comment", "COMMENT", 15, search_filter});
 
     for (const auto& open_trade : open_trades_vector) {
         double             multiplier = 1; // for USD
         ReportSymbolRecord symbol_record{};
 
-        if (group_record.currency != "USD") {
-            try {
-                server->CalculateConvertRateByCurrency(
-                    group_record.currency, "USD", static_cast<int>(open_trade.cmd), &multiplier);
-            } catch (const std::exception& e) {
-                std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
-            }
-        }
+        // Conversion disabled
+        // if (group_record.currency != "USD") {
+        //     try {
+        //         server->CalculateConvertRateByCurrency(
+        //             group_record.currency, "USD", static_cast<int>(open_trade.cmd), &multiplier);
+        //     } catch (const std::exception& e) {
+        //         std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
+        //     }
+        // }
 
         try {
             server->GetSymbol(open_trade.symbol, &symbol_record);
@@ -158,10 +160,11 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
             std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
         }
 
-        open_orders_total_map["USD"].volume += open_trade.volume;
-        open_orders_total_map["USD"].profit += open_trade.profit * multiplier;
-        open_orders_total_map["USD"].commission += open_trade.commission * multiplier;
-        open_orders_total_map["USD"].storage += open_trade.storage * multiplier;
+        open_orders_total_map[group_record.currency].volume += open_trade.volume;
+        open_orders_total_map[group_record.currency].profit += open_trade.profit * multiplier;
+        open_orders_total_map[group_record.currency].commission +=
+            open_trade.commission * multiplier;
+        open_orders_total_map[group_record.currency].storage += open_trade.storage * multiplier;
 
         double market_price =
             utils::GetMarketPriceByCmd(static_cast<int>(open_trade.cmd), symbol_record);
@@ -179,15 +182,20 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
              utils::TruncateDouble(open_trade.tp * multiplier, 5),
              utils::TruncateDouble(open_trade.commission * multiplier, 2),
              utils::TruncateDouble(open_trade.storage * multiplier, 2),
+             group_record.currency,
              open_trade.comment});
     }
 
     JSONArray open_orders_total_array;
     open_orders_total_array.emplace_back(JSONObject{
-        {"volume", utils::TruncateDouble(open_orders_total_map["USD"].volume / 100.0, 2)},
-        {"profit", utils::TruncateDouble(open_orders_total_map["USD"].profit, 2)},
-        {"commission", utils::TruncateDouble(open_orders_total_map["USD"].commission, 2)},
-        {"storage", utils::TruncateDouble(open_orders_total_map["USD"].storage, 2)}});
+        {"volume",
+         utils::TruncateDouble(open_orders_total_map[group_record.currency].volume / 100.0, 2)},
+        {"profit", utils::TruncateDouble(open_orders_total_map[group_record.currency].profit, 2)},
+        {"commission",
+         utils::TruncateDouble(open_orders_total_map[group_record.currency].commission, 2)},
+        {"currency", group_record.currency},
+        {"storage",
+         utils::TruncateDouble(open_orders_total_map[group_record.currency].storage, 2)}});
     open_orders_table_builder.SetTotalData(open_orders_total_array);
 
     const JSONObject open_orders_table_props = open_orders_table_builder.CreateTableProps();
@@ -218,20 +226,23 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     pending_orders_table_builder.AddColumn({"sl", "S / L", 9, search_filter});
     pending_orders_table_builder.AddColumn({"tp", "T / P", 10, search_filter});
     pending_orders_table_builder.AddColumn({"expiration", "EXPIRATION", 11, date_time_filter});
-    pending_orders_table_builder.AddColumn({"comment", "COMMENT", 12, search_filter});
+    pending_orders_table_builder.AddColumn({"currency", "CURRENCY", 12, search_filter});
+    pending_orders_table_builder.AddColumn({"comment", "COMMENT", 13, search_filter});
 
     for (const auto& pending_trade : pending_trades_vector) {
         double             multiplier = 1; // For USD
         ReportSymbolRecord symbol_record{};
 
-        if (group_record.currency != "USD") {
-            try {
-                server->CalculateConvertRateByCurrency(
-                    group_record.currency, "USD", static_cast<int>(pending_trade.cmd), &multiplier);
-            } catch (const std::exception& e) {
-                std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
-            }
-        }
+        // Conversion disabled
+        // if (group_record.currency != "USD") {
+        //     try {
+        //         server->CalculateConvertRateByCurrency(
+        //             group_record.currency, "USD", static_cast<int>(pending_trade.cmd),
+        //             &multiplier);
+        //     } catch (const std::exception& e) {
+        //         std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
+        //     }
+        // }
 
         try {
             server->GetSymbol(pending_trade.symbol, &symbol_record);
@@ -239,7 +250,7 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
             std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
         }
 
-        pending_orders_total_map["USD"].volume += pending_trade.volume;
+        pending_orders_total_map[group_record.currency].volume += pending_trade.volume;
 
         double market_price =
             utils::GetMarketPriceByCmd(static_cast<int>(pending_trade.cmd), symbol_record);
@@ -255,12 +266,15 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
              utils::TruncateDouble(pending_trade.sl * multiplier, 5),
              utils::TruncateDouble(pending_trade.tp * multiplier, 5),
              utils::FormatTimestampToString(pending_trade.expiration),
+             group_record.currency,
              pending_trade.comment});
     }
 
     JSONArray pending_orders_total_array;
     pending_orders_total_array.emplace_back(JSONObject{
-        {"volume", utils::TruncateDouble(pending_orders_total_map["USD"].volume / 100.0, 2)}});
+        {"volume",
+         utils::TruncateDouble(pending_orders_total_map[group_record.currency].volume / 100.0, 2)},
+        {"currency", group_record.currency}});
     pending_orders_table_builder.SetTotalData(pending_orders_total_array);
 
     const JSONObject pending_trades_table_props = pending_orders_table_builder.CreateTableProps();
@@ -293,24 +307,28 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     closed_orders_table_builder.AddColumn({"tp", "T / P", 12, search_filter});
     closed_orders_table_builder.AddColumn({"commission", "COMMISSION", 13, search_filter});
     closed_orders_table_builder.AddColumn({"storage", "SWAP", 14, search_filter});
-    closed_orders_table_builder.AddColumn({"comment", "COMMENT", 15, search_filter});
+    closed_orders_table_builder.AddColumn({"currency", "CURRENCY", 15, search_filter});
+    closed_orders_table_builder.AddColumn({"comment", "COMMENT", 16, search_filter});
 
     for (const auto& closed_trade : closed_trades_vector) {
         double multiplier = 1;
 
-        if (group_record.currency != "USD") {
-            try {
-                server->CalculateConvertRateByCurrency(
-                    group_record.currency, "USD", static_cast<int>(closed_trade.cmd), &multiplier);
-            } catch (const std::exception& e) {
-                std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
-            }
-        }
+        // Conversion disabled
+        // if (group_record.currency != "USD") {
+        //     try {
+        //         server->CalculateConvertRateByCurrency(
+        //             group_record.currency, "USD", static_cast<int>(closed_trade.cmd),
+        //             &multiplier);
+        //     } catch (const std::exception& e) {
+        //         std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
+        //     }
+        // }
 
-        closed_orders_total_map["USD"].volume += closed_trade.volume;
-        closed_orders_total_map["USD"].profit += closed_trade.profit * multiplier;
-        closed_orders_total_map["USD"].commission += closed_trade.commission * multiplier;
-        closed_orders_total_map["USD"].storage += closed_trade.storage * multiplier;
+        closed_orders_total_map[group_record.currency].volume += closed_trade.volume;
+        closed_orders_total_map[group_record.currency].profit += closed_trade.profit * multiplier;
+        closed_orders_total_map[group_record.currency].commission +=
+            closed_trade.commission * multiplier;
+        closed_orders_total_map[group_record.currency].storage += closed_trade.storage * multiplier;
 
         closed_orders_table_builder.AddRow(
             {utils::TruncateDouble(closed_trade.order, 0),
@@ -327,15 +345,20 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
              utils::TruncateDouble(closed_trade.tp, 5),
              utils::TruncateDouble(closed_trade.commission * multiplier, 2),
              utils::TruncateDouble(closed_trade.storage * multiplier, 2),
+             group_record.currency,
              closed_trade.comment});
     }
 
     JSONArray closed_orders_total_array;
     closed_orders_total_array.emplace_back(JSONObject{
-        {"volume", utils::TruncateDouble(closed_orders_total_map["USD"].volume / 100.0, 2)},
-        {"profit", utils::TruncateDouble(closed_orders_total_map["USD"].profit, 2)},
-        {"commission", utils::TruncateDouble(closed_orders_total_map["USD"].commission, 2)},
-        {"storage", utils::TruncateDouble(closed_orders_total_map["USD"].storage, 2)}});
+        {"volume",
+         utils::TruncateDouble(closed_orders_total_map[group_record.currency].volume / 100.0, 2)},
+        {"profit", utils::TruncateDouble(closed_orders_total_map[group_record.currency].profit, 2)},
+        {"commission",
+         utils::TruncateDouble(closed_orders_total_map[group_record.currency].commission, 2)},
+        {"currency", group_record.currency},
+        {"storage",
+         utils::TruncateDouble(closed_orders_total_map[group_record.currency].storage, 2)}});
     closed_orders_table_builder.SetTotalData(closed_orders_total_array);
 
     const JSONObject closed_orders_table_props = closed_orders_table_builder.CreateTableProps();
@@ -359,21 +382,23 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
     transactions_table_builder.AddColumn({"type", "TRANSACTION_TYPE", 4, search_filter});
     transactions_table_builder.AddColumn({"profit", "AMOUNT", 5, search_filter});
     transactions_table_builder.AddColumn({"open_time", "CREATION_TIME", 6, date_time_filter});
-    transactions_table_builder.AddColumn({"comment", "COMMENT", 7, search_filter});
+    transactions_table_builder.AddColumn({"currency", "CURRENCY", 7, search_filter});
+    transactions_table_builder.AddColumn({"comment", "COMMENT", 8, search_filter});
 
     for (const auto& trx : transactions_vector) {
         double multiplier = 1; // For USD
 
-        if (group_record.currency != "USD") {
-            try {
-                server->CalculateConvertRateByCurrency(
-                    group_record.currency, "USD", static_cast<int>(trx.cmd), &multiplier);
-            } catch (const std::exception& e) {
-                std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
-            }
-        }
+        // Conversion disabled
+        // if (group_record.currency != "USD") {
+        //     try {
+        //         server->CalculateConvertRateByCurrency(
+        //             group_record.currency, "USD", static_cast<int>(trx.cmd), &multiplier);
+        //     } catch (const std::exception& e) {
+        //         std::cerr << "[AccountSummaryReportInterface]: " << e.what() << std::endl;
+        //     }
+        // }
 
-        transactions_total_map["USD"].profit += trx.profit * multiplier;
+        transactions_total_map[group_record.currency].profit += trx.profit * multiplier;
 
         transactions_table_builder.AddRow({utils::TruncateDouble(trx.order, 0),
                                            std::to_string(account_record.login),
@@ -381,12 +406,14 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
                                            utils::ConvertCmdToString(static_cast<int>(trx.cmd)),
                                            utils::TruncateDouble(trx.profit * multiplier, 2),
                                            utils::FormatTimestampToString(trx.open_time),
+                                           group_record.currency,
                                            trx.comment});
     }
 
     JSONArray transactions_total_array;
-    transactions_total_array.emplace_back(
-        JSONObject{{"profit", utils::TruncateDouble(transactions_total_map["USD"].profit, 2)}});
+    transactions_total_array.emplace_back(JSONObject{
+        {"profit", utils::TruncateDouble(transactions_total_map[group_record.currency].profit, 2)},
+        {"currency", group_record.currency}});
     transactions_table_builder.SetTotalData(transactions_total_array);
 
     const JSONObject transactions_table_props = transactions_table_builder.CreateTableProps();
