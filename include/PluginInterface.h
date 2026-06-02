@@ -14,10 +14,12 @@
 #include "rapidjson/document.h"
 #include "utils/Utils.h"
 #include "ReportServerInterface.h"
+#include "validators/RequestValidator.h"
 #include "ast/Ast.hpp"
 #include "sbxTableBuilder/SBXTableBuilder.hpp"
 #include "structures/ReportStructures.h"
 #include "structures/ReportType.h"
+#include "structures/ValidationResult.h"
 
 extern "C" {
     int GetReportApiVersion();

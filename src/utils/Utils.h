@@ -5,6 +5,7 @@
 #include <ctime>
 #include <iomanip>
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
@@ -31,5 +32,9 @@ namespace utils {
     std::string ConvertCmdToString(const int cmd);
 
     double GetMarketPriceByCmd(const int cmd, const ReportSymbolRecord& symbol_record);
+
+    std::string Trim(const std::string& str);
+
+    std::set<std::string> SplitToSet(const std::string& str);
 
 } // namespace utils

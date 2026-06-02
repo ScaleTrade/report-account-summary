@@ -30,18 +30,33 @@ extern "C" void CreateReport(rapidjson::Value&                   request,
                              rapidjson::Value&                   response,
                              rapidjson::Document::AllocatorType& allocator,
                              ReportServerInterface*              server) {
-    int login = 0;
-    int from  = 0;
-    int to    = 0;
+    // Validation
+    constexpr ReportType   report_type = ReportType::RangeAccount;
+    const ValidationResult validation_result =
+        RequestValidator::ValidateRequest(report_type, request, server);
 
-    if (request.HasMember("login") && request["login"].IsInt())
-        login = request["login"].GetInt();
+    if (!validation_result.allowed) {
+        std::cerr << "[AccountEquityReportInterface]: " << validation_result.code
+                  << ", message: " << validation_result.message << std::endl;
 
-    if (request.HasMember("from") && request["from"].IsInt())
-        from = request["from"].GetInt();
+        const Node report =
+            div({h1({text("Access Denied")},
+                    props({{"style", JSONValue(JSONObject{{"color", JSONValue("#dc2626")}})}})),
+                 h2({text("Code: " + std::to_string(validation_result.code))}),
+                 h2({text(validation_result.message)},
+                    props({{"style", JSONValue(JSONObject{{"color", JSONValue("gray")}})}}))});
 
-    if (request.HasMember("to") && request["to"].IsInt())
-        to = request["to"].GetInt();
+        utils::CreateUI(report, response, allocator);
+        return;
+    }
+
+    std::cout << "[AccountEquityReportInterface]: " << validation_result.code
+              << ", message: " << validation_result.message << std::endl;
+
+    // Execution
+    int login = request["login"].GetInt();
+    int from  = request["from"].GetInt();
+    int to    = request["to"].GetInt();
 
     ReportAccountRecord            account_record{};
     ReportGroupRecord              group_record{};
